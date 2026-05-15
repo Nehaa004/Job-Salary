@@ -1,4 +1,4 @@
-# =========================
+'''# =========================
 # IMPORT LIBRARIES
 # =========================
 import streamlit as st
@@ -105,4 +105,67 @@ input_df[num_cols] = scaler.transform(input_df[num_cols])
 if st.button("Predict Salary"):
     prediction = model.predict(input_df)
     st.success(f"💰 Predicted Salary: {int(prediction[0])}")
-    st.balloons()
+    st.balloons()'''
+
+
+# Simple Login Page for Job Salary Prediction Project
+# Using Tkinter
+
+from tkinter import *
+from tkinter import messagebox
+
+# Function for login
+def login():
+    username = entry_username.get()
+    password = entry_password.get()
+
+    # Default username and password
+    if username == "admin" and password == "1234":
+        messagebox.showinfo("Login Success", "Welcome to Job Salary Prediction Project")
+    else:
+        messagebox.showerror("Login Failed", "Invalid Username or Password")
+
+# Main window
+root = Tk()
+root.title("Job Salary Prediction Login")
+root.geometry("400x300")
+root.configure(bg="lightblue")
+
+# Heading
+title = Label(root, text="Job Salary Prediction System",
+              font=("Arial", 16, "bold"),
+              bg="lightblue",
+              fg="darkblue")
+title.pack(pady=20)
+
+# Username Label
+label_username = Label(root, text="Username",
+                       font=("Arial", 12),
+                       bg="lightblue")
+label_username.pack()
+
+# Username Entry
+entry_username = Entry(root, width=30)
+entry_username.pack(pady=5)
+
+# Password Label
+label_password = Label(root, text="Password",
+                       font=("Arial", 12),
+                       bg="lightblue")
+label_password.pack()
+
+# Password Entry
+entry_password = Entry(root, width=30, show="*")
+entry_password.pack(pady=5)
+
+# Login Button
+login_button = Button(root,
+                      text="Login",
+                      font=("Arial", 12, "bold"),
+                      bg="darkblue",
+                      fg="white",
+                      command=login)
+login_button.pack(pady=20)
+
+# Run window
+root.mainloop()
