@@ -108,64 +108,168 @@ if st.button("Predict Salary"):
     st.balloons()'''
 
 
-# Simple Login Page for Job Salary Prediction Project
-# Using Tkinter
+# =========================
+# IMPORT LIBRARIES
+# =========================
+import streamlit as st
+import pickle
+import pandas as pd
 
-from tkinter import *
-from tkinter import messagebox
+# =========================
+# SIMPLE LOGIN SYSTEM
+# =========================
 
-# Function for login
+# Default user credentials
+USER_CREDENTIALS = {
+    "admin": "1234",
+    "user": "password"
+}
+
+# Session state for login
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+# Login Function
 def login():
-    username = entry_username.get()
-    password = entry_password.get()
+    username = st.session_state.username
+    password = st.session_state.password
 
-    # Default username and password
-    if username == "admin" and password == "1234":
-        messagebox.showinfo("Login Success", "Welcome to Job Salary Prediction Project")
+    if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+        st.session_state.logged_in = True
+        st.success(f"Welcome {username}!")
     else:
-        messagebox.showerror("Login Failed", "Invalid Username or Password")
+        st.error("Invalid Username or Password")
 
-# Main window
-root = Tk()
-root.title("Job Salary Prediction Login")
-root.geometry("400x300")
-root.configure(bg="lightblue")
+# =========================
+# LOGIN PAGE
+# =========================
+if not st.session_state.logged_in:
 
-# Heading
-title = Label(root, text="Job Salary Prediction System",
-              font=("Arial", 16, "bold"),
-              bg="lightblue",
-              fg="darkblue")
-title.pack(pady=20)
+    st.title("🔐 Login Page")
 
-# Username Label
-label_username = Label(root, text="Username",
-                       font=("Arial", 12),
-                       bg="lightblue")
-label_username.pack()
+    st.text_input("Username", key="username")
+    st.text_input("Password", type="password", key="password")
 
-# Username Entry
-entry_username = Entry(root, width=30)
-entry_username.pack(pady=5)
+    st.button("Login", on_click=login)
 
-# Password Label
-label_password = Label(root, text="Password",
-                       font=("Arial", 12),
-                       bg="lightblue")
-label_password.pack()
+# =========================
+# MAIN APP AFTER LOGIN
+# =========================
+else:
 
-# Password Entry
-entry_password = Entry(root, width=30, show="*")
-entry_password.pack(pady=5)
+    # Logout Button
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.rerun()
 
-# Login Button
-login_button = Button(root,
-                      text="Login",
-                      font=("Arial", 12, "bold"),
-                      bg="darkblue",
-                      fg="white",
-                      command=login)
-login_button.pack(pady=20)
+    # =========================
+    # LOAD FILES
+    # =========================
+    model = pickle.load(open("knn_model.pkl", "rb"))
+    scaler = pickle.load(open("scaler.pkl", "rb"))
+    columns = pickle.load(open("columns.pkl", "rb"))
 
-# Run window
-root.mainloop()
+    # =========================
+    # HELPER: EXTRACT OPTIONS
+    # =========================
+    def get_options(prefix):
+        opts = [col.replace(prefix, "") for col in columns if col.startswith(prefix)]
+        opts = sorted(list(set(opts)))
+        return opts
+
+    # Extract all possible options
+    job_options = get_options("job_title_")
+    edu_options = get_options("education_level_")
+    loc_options = get_options("location_")
+    ind_options = get_options("industry_")
+    company_options = get_options("company_size_")
+    remote_options = get_options("remote_work_")
+
+    # Add baseline category
+    job_options = ["Other"] + job_options
+    edu_options = ["Other"] + edu_options
+    loc_options = ["Other"] + loc_options
+    ind_options = ["Other"] + ind_options
+    company_options = ["Other"] + company_options
+    remote_options = ["Other"] + remote_options
+
+    # =========================
+    # TITLE
+    # =========================
+    st.title("💼 Salary Prediction App (KNN Improved)")
+
+    # =========================
+    # USER INPUT
+    # =========================
+    exp = st.number_input("Experience (years)", 0, 30)
+    skills = st.number_input("Skills Count", 0, 50)
+    cert = st.number_input("Certifications", 0, 20)
+
+    job = st.selectbox("Job Role", job_options)
+    edu = st.selectbox("Education", edu_options)
+    loc = st.selectbox("Location", loc_options)
+    ind = st.selectbox("Industry", ind_options)
+    company = st.selectbox("Company Size", company_options)
+    remote = st.selectbox("Remote Work", remote_options)
+
+    # =========================
+    # CREATE INPUT
+    # =========================
+    input_dict = {
+        "experience_years": exp,
+        "skills_count": skills,
+        "certifications": cert,
+        "job_title": job,
+        "education_level": edu,
+        "location": loc,
+        "industry": ind,
+        "company_size": company,
+        "remote_work": remote
+    }
+
+    input_df = pd.DataFrame([input_dict])
+
+    # =========================
+    # FEATURE ENGINEERING
+    # =========================
+    input_df['exp_squared'] = input_df['experience_years'] ** 2
+    input_df['skill_per_exp'] = (
+        input_df['skills_count'] / (input_df['experience_years'] + 1)
+    )
+    input_df['cert_per_skill'] = (
+        input_df['certifications'] / (input_df['skills_count'] + 1)
+    )
+
+    input_df['seniority'] = pd.cut(
+        input_df['experience_years'],
+        bins=[0, 2, 5, 10, 20],
+        labels=['Fresher', 'Junior', 'Mid', 'Senior']
+    )
+
+    # =========================
+    # DUMMIES + ALIGN
+    # =========================
+    input_df = pd.get_dummies(input_df)
+    input_df = input_df.reindex(columns=columns, fill_value=0)
+
+    # =========================
+    # SCALE
+    # =========================
+    num_cols = [
+        'experience_years',
+        'skills_count',
+        'certifications',
+        'exp_squared',
+        'skill_per_exp',
+        'cert_per_skill'
+    ]
+
+    input_df[num_cols] = scaler.transform(input_df[num_cols])
+
+    # =========================
+    # PREDICTION
+    # =========================
+    if st.button("Predict Salary"):
+        prediction = model.predict(input_df)
+        st.success(f"💰 Predicted Salary: ₹ {int(prediction[0])}")
+        st.balloons()
