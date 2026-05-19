@@ -243,16 +243,15 @@ elif menu == "Signup":
         st.success("Account Created Successfully 🎉")
 
 # ---------------- SALARY PREDICTION ----------------
+# ---------------- SALARY PREDICTION ----------------
 elif menu == "Salary Prediction":
 
     st.title("💰 Salary Prediction")
 
-    # Load Model
-    # model = pickle.load(open("salary_model.pkl", "rb"))
-
     col1, col2 = st.columns(2)
 
     with col1:
+
         experience = st.number_input(
             "Experience (Years)",
             min_value=0,
@@ -264,9 +263,14 @@ elif menu == "Salary Prediction":
             ["Bachelor", "Master", "PhD"]
         )
 
-        skills = st.slider("Skills Rating", 1, 10)
+        skills = st.slider(
+            "Skills Rating",
+            1,
+            10
+        )
 
     with col2:
+
         job_title = st.selectbox(
             "Job Role",
             [
@@ -283,21 +287,20 @@ elif menu == "Salary Prediction":
             15
         )
 
-   if st.button("Predict Salary"):
+    if st.button("Predict Salary"):
 
-    predicted_salary = (
-        25000
-        + experience * 5000
-        + skills * 3000
-        + certifications * 2000
-    )
+        predicted_salary = (
+            25000
+            + experience * 5000
+            + skills * 3000
+            + certifications * 2000
+        )
 
-    st.success(
-        f"Predicted Salary: ₹ {predicted_salary:,.2f}"
-    )
+        st.success(
+            f"Predicted Salary: ₹ {predicted_salary:,.2f}"
+        )
 
-    st.balloons()
-
+        st.balloons()
 # ---------------- ROADMAP PAGE ----------------
 elif menu == "Roadmap":
 
