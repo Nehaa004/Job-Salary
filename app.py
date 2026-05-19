@@ -302,20 +302,21 @@ elif menu == "Salary Prediction":
         )
 
     # Prediction Button
-    if st.button("Predict Salary"):
+   # Prediction Button
+if st.button("Predict Salary"):
 
-        predicted_salary = (
-            25000
-            + (experience * 5000)
-            + (skills * 3000)
-            + (certifications * 2000)
-        )
+    predicted_salary = (
+        25000
+        + (experience * 5000)
+        + (skills * 3000)
+        + (certifications * 2000)
+    )
 
-        st.success(
-            f"Predicted Salary: ₹ {predicted_salary:,.2f}"
-        )
+    st.success(
+        f"Predicted Salary: ₹ {predicted_salary:,.2f}"
+    )
 
-        st.balloons()
+    st.balloons()
 
 # ---------------- ROADMAP PAGE ----------------
 elif menu == "Roadmap":
@@ -389,5 +390,6 @@ elif menu == "Insights":
     - Technical skills increase salary chances
     - Certifications improve opportunities
     """)
+    
 
      st.balloons()
