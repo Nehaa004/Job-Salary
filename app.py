@@ -391,5 +391,4 @@ elif menu == "Insights":
     - Certifications improve opportunities
     """)
     
-
-     st.balloons()
+       st.balloons()
