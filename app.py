@@ -283,21 +283,20 @@ elif menu == "Salary Prediction":
             15
         )
 
-    if st.button("Predict Salary"):
+   if st.button("Predict Salary"):
 
-        # Dummy prediction logic
-        predicted_salary = (
-            25000
-            + experience * 5000
-            + skills * 3000
-            + certifications * 2000
-        )
+    predicted_salary = (
+        25000
+        + experience * 5000
+        + skills * 3000
+        + certifications * 2000
+    )
 
-        st.success(
-            f"Predicted Salary: ₹ {predicted_salary:,.2f}"
-        )
+    st.success(
+        f"Predicted Salary: ₹ {predicted_salary:,.2f}"
+    )
 
-        st.balloons()
+    st.balloons()
 
 # ---------------- ROADMAP PAGE ----------------
 elif menu == "Roadmap":
