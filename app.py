@@ -115,7 +115,6 @@ if st.button("Predict Salary"):
 import streamlit as st
 import pandas as pd
 import numpy as np
-import pickle
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -132,13 +131,14 @@ st.markdown("""
     background-color: #f5f7fa;
 }
 
-.stButton>button {
+.stButton > button {
     width: 100%;
     background-color: #4CAF50;
     color: white;
     border-radius: 10px;
     height: 45px;
     font-size: 16px;
+    border: none;
 }
 
 .topbar {
@@ -151,10 +151,6 @@ st.markdown("""
 .topbar h1 {
     color: white;
     text-align: center;
-}
-
-.sidebar .sidebar-content {
-    background-color: #1f2937;
 }
 
 .card {
@@ -195,7 +191,7 @@ if menu == "Home":
     st.title("🏠 Home")
 
     st.markdown("""
-    ### Welcome to the Job Salary Prediction System
+    ## Welcome to the Job Salary Prediction System
     
     This project predicts salary based on:
     
@@ -208,16 +204,22 @@ if menu == "Home":
     ### Technologies Used
     - Python
     - Streamlit
-    - Machine Learning
     - Pandas
+    - NumPy
+    - Machine Learning
     - Scikit-learn
     """)
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Accuracy", "92%")
-    col2.metric("Dataset Size", "10K+")
-    col3.metric("Models Used", "KNN")
+    with col1:
+        st.metric("Accuracy", "92%")
+
+    with col2:
+        st.metric("Dataset Size", "10K+")
+
+    with col3:
+        st.metric("Model Used", "KNN")
 
 # ---------------- LOGIN PAGE ----------------
 elif menu == "Login":
@@ -225,7 +227,11 @@ elif menu == "Login":
     st.title("🔐 Login")
 
     username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
 
     if st.button("Login"):
         st.success("Login Successful ✅")
@@ -236,14 +242,18 @@ elif menu == "Signup":
     st.title("📝 Signup")
 
     new_user = st.text_input("Create Username")
+
     new_email = st.text_input("Email")
-    new_pass = st.text_input("Create Password", type="password")
+
+    new_pass = st.text_input(
+        "Create Password",
+        type="password"
+    )
 
     if st.button("Create Account"):
         st.success("Account Created Successfully 🎉")
 
-# ---------------- SALARY PREDICTION ----------------
-# ---------------- SALARY PREDICTION ----------------
+# ---------------- SALARY PREDICTION PAGE ----------------
 elif menu == "Salary Prediction":
 
     st.title("💰 Salary Prediction")
@@ -259,8 +269,12 @@ elif menu == "Salary Prediction":
         )
 
         education = st.selectbox(
-            "Education",
-            ["Bachelor", "Master", "PhD"]
+            "Education Level",
+            [
+                "Bachelor",
+                "Master",
+                "PhD"
+            ]
         )
 
         skills = st.slider(
@@ -287,13 +301,14 @@ elif menu == "Salary Prediction":
             15
         )
 
+    # Prediction Button
     if st.button("Predict Salary"):
 
         predicted_salary = (
             25000
-            + experience * 5000
-            + skills * 3000
-            + certifications * 2000
+            + (experience * 5000)
+            + (skills * 3000)
+            + (certifications * 2000)
         )
 
         st.success(
@@ -301,13 +316,14 @@ elif menu == "Salary Prediction":
         )
 
         st.balloons()
+
 # ---------------- ROADMAP PAGE ----------------
 elif menu == "Roadmap":
 
     st.title("🛣️ Career Roadmap")
 
     st.markdown("""
-    ### Steps to Become a Data Analyst
+    ## Steps to Become a Data Analyst
     
     1. Learn Python
     2. Learn Pandas & NumPy
@@ -324,36 +340,52 @@ elif menu == "Dashboard":
 
     st.title("📊 Dashboard")
 
-    st.line_chart(
-        pd.DataFrame(
-            np.random.randn(20, 3),
-            columns=["Salary", "Experience", "Skills"]
-        )
+    chart_data = pd.DataFrame(
+        np.random.randn(20, 3),
+        columns=[
+            "Salary",
+            "Experience",
+            "Skills"
+        ]
     )
 
-    st.bar_chart(
-        pd.DataFrame({
-            "Education": [50, 30, 20]
+    st.line_chart(chart_data)
+
+    education_data = pd.DataFrame(
+        {
+            "Students": [50, 30, 20]
         },
-        index=["Bachelor", "Master", "PhD"])
+        index=[
+            "Bachelor",
+            "Master",
+            "PhD"
+        ]
     )
+
+    st.bar_chart(education_data)
 
 # ---------------- INSIGHTS PAGE ----------------
 elif menu == "Insights":
 
     st.title("📈 Insights")
 
-    st.info("Candidates with more certifications tend to get higher salaries.")
+    st.info(
+        "Candidates with more certifications tend to get higher salaries."
+    )
 
-    st.warning("Experience has a strong impact on salary growth.")
+    st.warning(
+        "Experience has a strong impact on salary growth."
+    )
 
-    st.success("Machine Learning helps automate salary estimation.")
+    st.success(
+        "Machine Learning helps automate salary estimation."
+    )
 
     st.markdown("""
-    ### Key Findings
+    ## Key Findings
     
-    - Higher experience = Higher salary
-    - Master/PhD candidates earn more
+    - Higher experience leads to higher salary
+    - Master and PhD candidates earn more
     - Technical skills increase salary chances
     - Certifications improve opportunities
     """)
