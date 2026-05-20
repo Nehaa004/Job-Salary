@@ -18,7 +18,7 @@ st.set_page_config(
     page_title="SalaryIQ Pro — Know Your Worth",
     page_icon="💼",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # =========================
@@ -416,16 +416,32 @@ html, body, [class*="css"] { font-family:'Plus Jakarta Sans',sans-serif !importa
 .pw-track { height:4px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-bottom:6px; }
 .pw-bar   { height:100%; border-radius:99px; transition:width .3s,background .3s; }
 
-/* ── Native Streamlit Sidebar styling ── */
+/* ── Native Streamlit Sidebar — always expanded, no toggle ── */
 section[data-testid="stSidebar"] {
     background: #ffffff !important;
     border-right: 1px solid #e2e8f0 !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,.08) !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
+    box-shadow: 4px 0 28px rgba(0,0,0,.09) !important;
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
 }
-section[data-testid="stSidebar"] > div { padding: 0 !important; }
-[data-testid="stSidebarCollapseButton"] { display:none !important; }
+section[data-testid="stSidebar"] > div:first-child {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+}
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+    padding: 0 !important;
+}
+[data-testid="stSidebarCollapseButton"],
+button[data-testid="baseButton-headerNoPadding"],
+[data-testid="collapsedControl"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+section[data-testid="stSidebar"] .stMarkdown { margin: 0 !important; }
+section[data-testid="stSidebar"] .stButton  { margin: 2px 0 !important; }
 
 h1,h2,h3 { font-family:'Syne',sans-serif !important; color:#0f172a !important; }
 p,li { color:#475569; }
@@ -568,16 +584,33 @@ def show_sidebar():
     section   = st.session_state.sidebar_section
 
     with st.sidebar:
+        # Strip Streamlit's default sidebar padding so our gradient header is flush
+        st.markdown("""
+        <style>
+        section[data-testid="stSidebar"] > div:first-child > div:first-child {
+            padding-top: 0 !important;
+        }
+        section[data-testid="stSidebar"] > div:first-child {
+            padding: 0 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         # ── Avatar header ──
         st.markdown(f"""
-        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:28px 20px 20px;margin:-1px -1px 0;">
-            <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.25);
+        <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                    padding:28px 20px 22px 20px; width:100%; box-sizing:border-box;">
+            <div style="width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.22);
                         display:flex;align-items:center;justify-content:center;
-                        font-size:22px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.4);
+                        font-size:21px;font-weight:800;color:#fff;
+                        border:2.5px solid rgba(255,255,255,.45);
                         margin-bottom:12px;">{initials}</div>
-            <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;">{user_data.get('name','—')}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;">{user_data.get('email','—')}</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;">Member since {since}</div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;
+                        word-break:break-word;">{user_data.get("name","—")}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;
+                        word-break:break-all;">{user_data.get("email","—")}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;">
+                Member since {since}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -957,6 +990,17 @@ def show_leaderboard():
 # =====================================================
 def show_app():
     show_sidebar()   # renders into st.sidebar — always visible
+    # Force sidebar to stay expanded via JS click if it ever collapses
+    st.markdown("""
+    <script>
+    (function keepSidebarOpen() {
+        var btn = window.parent.document.querySelector('[data-testid="collapsedControl"] button');
+        if (btn) btn.click();
+        var colBtn = window.parent.document.querySelector('[data-testid="stSidebarCollapseButton"]');
+        if (colBtn) colBtn.style.display = 'none';
+    })();
+    </script>
+    """, unsafe_allow_html=True)
     show_nav()
     tab = st.session_state.active_tab
     if   tab == "predict":     show_predict()
@@ -972,7 +1016,15 @@ def show_app():
 # =====================================================
 if st.session_state.logged_in:
     show_app()
-elif st.session_state.auth_page == "signup":
-    show_signup()
 else:
-    show_login()
+    # Hide the sidebar entirely on auth pages
+    st.markdown("""
+    <style>
+    section[data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"]  { display: none !important; }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.session_state.auth_page == "signup":
+        show_signup()
+    else:
+        show_login()
