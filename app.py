@@ -416,32 +416,56 @@ html, body, [class*="css"] { font-family:'Plus Jakarta Sans',sans-serif !importa
 .pw-track { height:4px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-bottom:6px; }
 .pw-bar   { height:100%; border-radius:99px; transition:width .3s,background .3s; }
 
-/* ── Native Streamlit Sidebar — always expanded, no toggle ── */
+/* ── Sidebar: fixed position, full height, internal scroll ── */
 section[data-testid="stSidebar"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
     background: #ffffff !important;
     border-right: 1px solid #e2e8f0 !important;
-    box-shadow: 4px 0 28px rgba(0,0,0,.09) !important;
-    width: 300px !important;
-    min-width: 300px !important;
-    max-width: 300px !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.08) !important;
+    z-index: 200 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
+/* The inner scrollable wrapper Streamlit creates */
 section[data-testid="stSidebar"] > div:first-child {
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding: 0 !important;
     margin: 0 !important;
-    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
+/* Remove ALL default gap/padding from vertical blocks inside sidebar */
 section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
     gap: 0 !important;
     padding: 0 !important;
 }
+/* Hide collapse button */
 [data-testid="stSidebarCollapseButton"],
 button[data-testid="baseButton-headerNoPadding"],
 [data-testid="collapsedControl"] {
     display: none !important;
     visibility: hidden !important;
 }
+/* Push main content right so it doesn't hide behind fixed sidebar */
+section[data-testid="stMain"],
+[data-testid="stAppViewContainer"] > section.main {
+    margin-left: 280px !important;
+}
 section[data-testid="stSidebar"] .stMarkdown { margin: 0 !important; }
 section[data-testid="stSidebar"] .stButton  { margin: 2px 0 !important; }
+/* Thin scrollbar inside sidebar */
+section[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar { width: 4px; }
+section[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-track { background: #f8fafc; }
+section[data-testid="stSidebar"] > div:first-child::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 99px; }
 
 h1,h2,h3 { font-family:'Syne',sans-serif !important; color:#0f172a !important; }
 p,li { color:#475569; }
@@ -584,13 +608,16 @@ def show_sidebar():
     section   = st.session_state.sidebar_section
 
     with st.sidebar:
-        # Strip Streamlit's default sidebar padding so our gradient header is flush
+        # Remove every layer of default Streamlit padding inside the sidebar
         st.markdown("""
         <style>
-        section[data-testid="stSidebar"] > div:first-child > div:first-child {
-            padding-top: 0 !important;
+        section[data-testid="stSidebar"] > div:first-child > div {
+            padding: 0 !important; margin: 0 !important;
         }
-        section[data-testid="stSidebar"] > div:first-child {
+        section[data-testid="stSidebar"] > div:first-child > div > div {
+            padding: 0 !important; margin: 0 !important;
+        }
+        section[data-testid="stSidebar"] > div:first-child > div > div > div {
             padding: 0 !important;
         }
         </style>
@@ -617,7 +644,7 @@ def show_sidebar():
         # ── Stats row ──
         st.markdown(f"""
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 16px;
-                    border-bottom:1px solid #f1f5f9;">
+                    background:#fff;border-bottom:1px solid #f1f5f9;">
             <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 6px;text-align:center;">
                 <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#4f46e5;">{len(preds)}</div>
                 <div style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">Predictions</div>
@@ -633,30 +660,73 @@ def show_sidebar():
         </div>
         """, unsafe_allow_html=True)
 
-        # ── Section tab buttons ──
-        st.markdown("<div style='padding:10px 16px 4px;'>", unsafe_allow_html=True)
+        # ── Section tab buttons — scoped to sidebar only ──
+        info_active = "background:#eef2ff;color:#4f46e5;border:1.5px solid #c7d2fe;" if section=="info" else "background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;"
+        edit_active = "background:#eef2ff;color:#4f46e5;border:1.5px solid #c7d2fe;" if section=="edit" else "background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;"
+        sec_active  = "background:#eef2ff;color:#4f46e5;border:1.5px solid #c7d2fe;" if section=="security" else "background:#f8fafc;color:#64748b;border:1.5px solid #e2e8f0;"
+
+        st.markdown("""
+        <style>
+        /* Sidebar tab buttons — compact, not full-width purple */
+        div[data-testid="stSidebar"] .sb-tab-btn > button {
+            width: auto !important;
+            background: #f8fafc !important;
+            color: #64748b !important;
+            border: 1.5px solid #e2e8f0 !important;
+            box-shadow: none !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            padding: 7px 6px !important;
+            border-radius: 8px !important;
+            transform: none !important;
+        }
+        div[data-testid="stSidebar"] .sb-tab-btn > button:hover {
+            background: #eef2ff !important;
+            color: #4f46e5 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        /* Sign out button in sidebar */
+        div[data-testid="stSidebar"] .sb-signout > button {
+            background: #fff1f2 !important; color: #ef4444 !important;
+            border: 1.5px solid #fecaca !important; box-shadow: none !important;
+            font-size: 13px !important; padding: 9px 16px !important;
+            margin: 0 16px !important; width: calc(100% - 32px) !important;
+            transform: none !important;
+        }
+        /* Save / Update buttons in sidebar */
+        div[data-testid="stSidebar"] .sb-save > button {
+            background: linear-gradient(135deg,#6366f1,#8b5cf6) !important;
+            color: #fff !important; border: none !important;
+            box-shadow: 0 3px 10px rgba(99,102,241,.3) !important;
+            font-size: 13px !important; padding: 10px 16px !important;
+            margin: 4px 16px !important; width: calc(100% - 32px) !important;
+            border-radius: 9px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<div style='padding:10px 12px 6px;'>", unsafe_allow_html=True)
         tc1, tc2, tc3 = st.columns(3)
         with tc1:
-            st.markdown(f'<style>.sb-info>button{{background:{"#eef2ff" if section=="info" else "#f8fafc"} !important;color:{"#4f46e5" if section=="info" else "#64748b"} !important;border:1.5px solid {"#c7d2fe" if section=="info" else "#e2e8f0"} !important;box-shadow:none !important;font-size:12px !important;padding:6px 4px !important;border-radius:8px !important;}}</style>', unsafe_allow_html=True)
-            st.markdown('<div class="sb-info">', unsafe_allow_html=True)
+            st.markdown(f'<style>div[data-testid="stSidebar"] .sb-tab-btn.active-tab > button{{background:#eef2ff !important;color:#4f46e5 !important;border:1.5px solid #c7d2fe !important;}}</style>', unsafe_allow_html=True)
+            st.markdown(f'<div class="sb-tab-btn{" active-tab" if section=="info" else ""}">', unsafe_allow_html=True)
             if st.button("👤 Info", key="sb_info"):
                 st.session_state.sidebar_section = "info"; st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         with tc2:
-            st.markdown(f'<style>.sb-edit>button{{background:{"#eef2ff" if section=="edit" else "#f8fafc"} !important;color:{"#4f46e5" if section=="edit" else "#64748b"} !important;border:1.5px solid {"#c7d2fe" if section=="edit" else "#e2e8f0"} !important;box-shadow:none !important;font-size:12px !important;padding:6px 4px !important;border-radius:8px !important;}}</style>', unsafe_allow_html=True)
-            st.markdown('<div class="sb-edit">', unsafe_allow_html=True)
+            st.markdown(f'<div class="sb-tab-btn{" active-tab" if section=="edit" else ""}">', unsafe_allow_html=True)
             if st.button("✏️ Edit", key="sb_edit"):
                 st.session_state.sidebar_section = "edit"; st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         with tc3:
-            st.markdown(f'<style>.sb-sec>button{{background:{"#eef2ff" if section=="security" else "#f8fafc"} !important;color:{"#4f46e5" if section=="security" else "#64748b"} !important;border:1.5px solid {"#c7d2fe" if section=="security" else "#e2e8f0"} !important;box-shadow:none !important;font-size:12px !important;padding:6px 4px !important;border-radius:8px !important;}}</style>', unsafe_allow_html=True)
-            st.markdown('<div class="sb-sec">', unsafe_allow_html=True)
+            st.markdown(f'<div class="sb-tab-btn{" active-tab" if section=="security" else ""}">', unsafe_allow_html=True)
             if st.button("🔒 Security", key="sb_sec"):
                 st.session_state.sidebar_section = "security"; st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("<div style='height:2px;background:#f1f5f9;margin:4px 0 0;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:1px;background:#e2e8f0;'></div>", unsafe_allow_html=True)
 
         # ── INFO section ──
         if section == "info":
@@ -690,6 +760,7 @@ def show_sidebar():
             new_phone = st.text_input("Phone",        value=user_data.get("phone",""),          key="e_phone",  placeholder="+91 98765 43210")
             new_loc   = st.text_input("City",         value=user_data.get("location_city",""),  key="e_loc",    placeholder="Bangalore, India")
             new_li    = st.text_input("LinkedIn URL", value=user_data.get("linkedin",""),       key="e_li",     placeholder="linkedin.com/in/yourname")
+            st.markdown('<div class="sb-save">', unsafe_allow_html=True)
             if st.button("💾  Save Changes", key="save_profile"):
                 if not new_name.strip():
                     st.error("Name cannot be empty.")
@@ -699,6 +770,7 @@ def show_sidebar():
                         st.session_state.user_name = new_name.strip()
                         st.success("✅ Profile updated!")
                         st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
         # ── SECURITY section ──
         elif section == "security":
@@ -706,6 +778,7 @@ def show_sidebar():
             old_pw  = st.text_input("Current Password", type="password", key="sec_old",  placeholder="Your current password")
             new_pw  = st.text_input("New Password",     type="password", key="sec_new",  placeholder="Min. 8 characters")
             conf_pw = st.text_input("Confirm New",      type="password", key="sec_conf", placeholder="Repeat new password")
+            st.markdown('<div class="sb-save">', unsafe_allow_html=True)
             if st.button("🔒  Update Password", key="upd_pw"):
                 if not all([old_pw, new_pw, conf_pw]):
                     st.error("Fill in all fields.")
@@ -716,6 +789,7 @@ def show_sidebar():
                 else:
                     ok, msg = update_user_password(st.session_state.user_email, old_pw, new_pw)
                     st.success("✅ "+msg) if ok else st.error(msg)
+            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown("""
             <div style="margin:12px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;">
                 <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:6px;">🔐 Security Tips</div>
@@ -727,7 +801,7 @@ def show_sidebar():
 
         # ── Sign out button at bottom ──
         st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-        st.markdown('<div class="signout-btn">', unsafe_allow_html=True)
+        st.markdown('<div class="sb-signout">', unsafe_allow_html=True)
         if st.button("🚪  Sign Out", key="sb_signout"):
             for k,v in [("logged_in",False),("user_name",""),("user_email",""),
                         ("active_tab","predict"),("last_prediction",None),("last_inputs",None)]:
@@ -994,3 +1068,37 @@ def show_app():
     st.markdown("""
     <script>
     (function keepSidebarOpen() {
+        var btn = window.parent.document.querySelector('[data-testid="collapsedControl"] button');
+        if (btn) btn.click();
+        var colBtn = window.parent.document.querySelector('[data-testid="stSidebarCollapseButton"]');
+        if (colBtn) colBtn.style.display = 'none';
+    })();
+    </script>
+    """, unsafe_allow_html=True)
+    show_nav()
+    tab = st.session_state.active_tab
+    if   tab == "predict":     show_predict()
+    elif tab == "insights":    show_insights()
+    elif tab == "roadmap":     show_roadmap()
+    elif tab == "dashboard":   show_dashboard()
+    elif tab == "compare":     show_compare()
+    elif tab == "leaderboard": show_leaderboard()
+
+
+# =====================================================
+# ENTRY POINT
+# =====================================================
+if st.session_state.logged_in:
+    show_app()
+else:
+    # Hide the sidebar entirely on auth pages
+    st.markdown("""
+    <style>
+    section[data-testid="stSidebar"] { display: none !important; }
+    [data-testid="collapsedControl"]  { display: none !important; }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.session_state.auth_page == "signup":
+        show_signup()
+    else:
+        show_login()
